@@ -94,30 +94,31 @@ class CodecRegistry {
    *
    * @static
    *
-   * @param ctor - JavaScript constructor function.
+   * @param constructor_ - JavaScript constructor function.
    */
-  static getCodec(constructor_: any): ObjectCodec | null {
-    let codec = null;
+  static getCodec(constructor_: ConstructorType<ObjectCodec> | string): ObjectCodec | null {
+    if (constructor_ == null){
+      return null;
+    }
+    // let codec = null;
 
-    if (constructor_ != null) {
-      let { name } = constructor_;
-      const tmp = CodecRegistry.aliases[name];
+    // let name = null;
+    // if (typeof constructor_ == 'string') {
+    //   name = constructor_;
+    // } else {
+    //   name = constructor_.name;
+    // }
+    let name = typeof constructor_ == 'string' ? constructor_: constructor_.name;
 
-      if (tmp != null) {
-        name = tmp;
-      }
-
-      codec = CodecRegistry.codecs[name] ?? null;
-
-      // Registers a new default codec for the given constructor
-      // if no codec has been previously defined.
-      if (codec == null) {
-        try {
-          codec = new ObjectCodec(new constructor_());
-          CodecRegistry.register(codec);
-        } catch (e) {
-          // ignore
-        }
+      // let { name } = constructor_;
+    name = CodecRegistry.aliases[name] ?? name;
+    let codec = CodecRegistry.codecs[name] ?? null;
+    if (codec == null && typeof constructor_ != 'string') {
+      try {
+        codec = new ObjectCodec(new constructor_());
+        CodecRegistry.register(codec);
+      } catch (e) {
+        // ignore
       }
     }
     return codec;
@@ -129,3 +130,5 @@ class CodecRegistry {
 }
 
 export default CodecRegistry;
+
+type ConstructorType<T> = new (...args : any[]) => T;
